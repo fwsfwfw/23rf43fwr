@@ -7,9 +7,10 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-# תיקיית הווידאו והלוג בתוך הסביבה
 VIDEO_DIR = os.path.join(os.getcwd(), "videos")
 LOG_FILE = os.path.join(os.getcwd(), "save_video_log.txt")
+COOKIES_FILE = os.path.join(os.getcwd(), "www.youtube.com_cookies.txt")  # ✅ נוספה שורת קובץ קוקיז
+
 os.makedirs(VIDEO_DIR, exist_ok=True)
 
 def log(message):
@@ -41,7 +42,8 @@ def save_video():
             'quiet': True,
             'noplaylist': True,
             'nocheckcertificate': True,
-            'merge_output_format': 'mp4'
+            'merge_output_format': 'mp4',
+            'cookies': COOKIES_FILE  # ✅ שימוש בקובץ העוגיות
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
