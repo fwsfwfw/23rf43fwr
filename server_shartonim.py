@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 import yt_dlp
@@ -7,7 +7,7 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-# תקייה יחסית בתוך Render או בתוך סביבת פיתוח
+# תיקיית הווידאו והלוג בתוך הסביבה
 VIDEO_DIR = os.path.join(os.getcwd(), "videos")
 LOG_FILE = os.path.join(os.getcwd(), "save_video_log.txt")
 os.makedirs(VIDEO_DIR, exist_ok=True)
@@ -45,13 +45,24 @@ def save_video():
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+            short_name = os.path.basename(filename)
 
         log(f"✅ אושר: הורדה בוצעה ל־URL: {url}")
-        return jsonify({"status": "אושר", "url": url})
+        return jsonify({
+            "status": "אושר",
+            "url": url,
+            "file": f"/video-file/{short_name}"
+        })
+
     except Exception as e:
         log(f"❌ שגיאה: {str(e)}")
         return jsonify({"status": "שגיאה", "error": str(e)}), 500
+
+@app.route('/video-file/<path:filename>')
+def serve_video(filename):
+    return send_from_directory(VIDEO_DIR, filename)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
